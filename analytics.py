@@ -2,7 +2,12 @@
 computes summary statistics.
 """
 
-from db import get_collection
+from pymongo import MongoClient
+
+# TODO: replace <db_password> with the real password for fatehanasrin7976_db_user
+MONGO_URI = "mongodb+srv://fatehanasrin7976_db_user:<db_password>@cluster0.idqmng1.mongodb.net/?appName=Cluster0"
+MONGO_DB_NAME = "student_activity_db"
+MONGO_COLLECTION = "student_events"
 
 ACTIVITY_TYPES = [
     "login",
@@ -10,6 +15,11 @@ ACTIVITY_TYPES = [
     "assignment_submission",
     "quiz_completion",
 ]
+
+
+def get_collection():
+    client = MongoClient(MONGO_URI)
+    return client[MONGO_DB_NAME][MONGO_COLLECTION]
 
 
 def compute_stats():

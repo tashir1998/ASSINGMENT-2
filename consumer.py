@@ -3,36 +3,39 @@ them, and stores them in MongoDB.
 """
 
 import json
-import os
 
-from dotenv import load_dotenv
 from kafka import KafkaConsumer
+from pymongo import MongoClient
 
-from db import get_collection
+KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
+KAFKA_TOPIC = "student_activities"
 
-load_dotenv()
-
-BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-TOPIC = os.getenv("KAFKA_TOPIC", "student_activities")
+# TODO: replace <db_password> with the real password for fatehanasrin7976_db_user
+MONGO_URI = "mongodb+srv://fatehanasrin7976_db_user:<db_password>@cluster0.idqmng1.mongodb.net/?appName=Cluster0"
+MONGO_DB_NAME = "student_activity_db"
+MONGO_COLLECTION = "student_events"
 
 # Stop after this many seconds of silence, so the script can be run and
 # graded without needing a manual Ctrl+C once the producer is done.
-IDLE_TIMEOUT_MS = int(os.getenv("CONSUMER_IDLE_TIMEOUT_MS", "10000"))
+IDLE_TIMEOUT_MS = 10000
 
 
 def main():
     consumer = KafkaConsumer(
-        TOPIC,
-        bootstrap_servers=BOOTSTRAP_SERVERS,
+        KAFKA_TOPIC,
+        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
         auto_offset_reset="earliest",
         enable_auto_commit=True,
         group_id="student-activity-consumer-group",
         value_deserializer=lambda v: json.loads(v.decode("utf-8")),
         consumer_timeout_ms=IDLE_TIMEOUT_MS,
     )
-    collection = get_collection()
 
-    print(f"Connected to Kafka at {BOOTSTRAP_SERVERS}, subscribed to '{TOPIC}'.")
+    mongo_client = MongoClient(MONGO_URI)
+    collection = mongo_client[MONGO_DB_NAME][MONGO_COLLECTION]
+
+    print(f"Connected to Kafka at {KAFKA_BOOTSTRAP_SERVERS}, subscribed to "
+          f"'{KAFKA_TOPIC}'.")
     print("Connected to MongoDB. Waiting for events...")
 
     message_counter = 0
@@ -46,6 +49,7 @@ def main():
         print("Stopped by user.")
     finally:
         consumer.close()
+        mongo_client.close()
         print(f"Done. Total messages consumed and stored: {message_counter}")
 
 

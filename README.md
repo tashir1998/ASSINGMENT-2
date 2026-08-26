@@ -49,13 +49,11 @@ bin/kafka-topics.sh \
 python -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-cp .env.example .env
 ```
 
-Edit `.env` and replace `<db_password>` in `MONGO_URI` with the real password
-for the `fatehanasrin7976_db_user` MongoDB Atlas user. `.env` is git-ignored,
-so the real password never gets committed.
+Open `consumer.py`, `analytics.py`, and `visualization.py` and replace
+`<db_password>` in `MONGO_URI` with the real password for the
+`fatehanasrin7976_db_user` MongoDB Atlas user.
 
 ## 3. Run it
 
@@ -73,7 +71,7 @@ python producer.py
 
 The consumer prints each event plus a running message counter and stops
 automatically ~10s after the producer finishes (idle timeout, configurable
-via `CONSUMER_IDLE_TIMEOUT_MS` in `.env`).
+via `IDLE_TIMEOUT_MS` in `consumer.py`).
 
 Then, once events are stored in MongoDB:
 
@@ -84,15 +82,16 @@ python visualization.py   # saves student_activity_chart.png and shows it
 
 ## Files
 
-- `db.py` — shared MongoDB connection helper
 - `producer.py` — Kafka producer, generates 1000 random student activity events
 - `consumer.py` — Kafka consumer, stores events in MongoDB, tracks a message counter
 - `analytics.py` — computes totals per activity type + most active student
-- `visualization.py` — bar chart of the analytics via Matplotlib
+- `visualization.py` — reads stats from MongoDB and saves a bar chart via Matplotlib
+- `student_activity_chart.png` — sample chart produced by `visualization.py`
 
 ## Notes
 
 - No Docker anywhere — Kafka runs as a local process (KRaft mode) on your
   own machine, started with the Apache Kafka scripts above.
-- MongoDB connection uses `pymongo` with the Atlas SRV connection string
-  from `MONGO_URI`, read from `.env` (never hardcoded, never committed).
+- Each script that talks to MongoDB (`consumer.py`, `analytics.py`,
+  `visualization.py`) declares its own `MONGO_URI` constant at the top of
+  the file — update the password in all three before running.

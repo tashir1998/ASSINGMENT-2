@@ -3,20 +3,16 @@ to the `student_activities` Kafka topic.
 """
 
 import json
-import os
 import random
 import time
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv
 from kafka import KafkaProducer
 
-load_dotenv()
-
-BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-TOPIC = os.getenv("KAFKA_TOPIC", "student_activities")
-EVENT_COUNT = int(os.getenv("PRODUCER_EVENT_COUNT", "1000"))
-DELAY_SECONDS = float(os.getenv("PRODUCER_DELAY_SECONDS", "0.01"))
+KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
+KAFKA_TOPIC = "student_activities"
+EVENT_COUNT = 1000
+DELAY_SECONDS = 0.01
 
 ACTIVITY_TYPES = [
     "login",
@@ -39,16 +35,16 @@ def build_event():
 
 def main():
     producer = KafkaProducer(
-        bootstrap_servers=BOOTSTRAP_SERVERS,
+        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
 
-    print(f"Connected to Kafka at {BOOTSTRAP_SERVERS}. Sending {EVENT_COUNT} events "
-          f"to topic '{TOPIC}'...")
+    print(f"Connected to Kafka at {KAFKA_BOOTSTRAP_SERVERS}. Sending {EVENT_COUNT} "
+          f"events to topic '{KAFKA_TOPIC}'...")
 
     for i in range(1, EVENT_COUNT + 1):
         event = build_event()
-        producer.send(TOPIC, value=event)
+        producer.send(KAFKA_TOPIC, value=event)
         print(f"[{i}/{EVENT_COUNT}] Sent: {event}")
         if DELAY_SECONDS:
             time.sleep(DELAY_SECONDS)
